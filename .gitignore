@@ -1,0 +1,4 @@
+
+blog_api/settings/.env
+blog_api/venv/
+blog_api/logs/
