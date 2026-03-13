@@ -1,17 +1,25 @@
 from django.db.models import (
     EmailField, CharField, BooleanField,
-    DateTimeField, ImageField
+    DateTimeField, # ImageField
 )
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.contrib.auth.password_validation import validate_password
 from typing import Any
 from django.core.exceptions import ValidationError
+from django.conf.global_settings import LANGUAGE_CODE, LANGUAGES
+from django.utils.translation import gettext_lazy as _
+import zoneinfo
+from rest_framework.serializers import ModelSerializer
+
+def get_timezone_choices():
+    return [(tz, tz) for tz in sorted(zoneinfo.available_timezones())]
+
 
 class CustomManagerUser(BaseUserManager):
     
     def create_user(self, email, password, **extra_fields):
         if not email:
-            raise ValueError(_("The Email must be set"))
+            raise ValueError(_("The Email must be set")) # added lazytext
         
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
@@ -42,7 +50,20 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = BooleanField(default=True)
     is_staff = BooleanField(default=False)
     date_joined = DateTimeField(auto_now_add=True)
-    avatar = ImageField(upload_to='avatars/', null=True, blank=True)
+    # avatar = ImageField(upload_to='avatars/', null=True, blank=True)
+    # Internalization
+    preferred_language = CharField(
+        choices=LANGUAGES,
+        default=LANGUAGE_CODE, 
+        max_length=10)
+    
+    timezone = CharField(
+        _("Timezone"),
+        max_length=50,
+        choices=get_timezone_choices,
+        default="UTC"
+    )
+    
     objects = CustomManagerUser()
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['first_name', 'last_name']
@@ -53,3 +74,19 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         verbose_name = "Custom User"
         verbose_name_plural = "Custom Users"
         ordering = ["-date_joined"]
+
+
+class LanguageUpdateSerializer(ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['preferred_language']
+
+class TimezoneUpdateSerializer(ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['timezone']
+
+    def validate_timezone(self, value):
+        if value not in zoneinfo.available_timezones():
+            raise ValidationError(_("Invalid IANA timezone identifier."))
+        return value

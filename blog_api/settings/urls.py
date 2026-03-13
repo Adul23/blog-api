@@ -21,8 +21,9 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from rest_framework.routers import DefaultRouter
-from apps.users.views import RegisterViewSet, CustomRefreshViewSet
-from apps.blog.views import PostViewSet, CategoryViewSet
+from apps.users.views import RegisterViewSet, CustomRefreshViewSet, UpdateLanguageView, UpdateTimezoneView
+from apps.blog.views import PostViewSet, CategoryViewSet, StatsView
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 
 router = DefaultRouter()
@@ -35,4 +36,17 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api/token/', CustomRefreshViewSet.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # path('api/set-preferences/', UpdateUserPreferencesView.as_view(), name='set-preferences'),
+    path('api/users/register/', RegisterViewSet.as_view({
+                    'post': 'create'
+                }), name='user-register'),
+    path('api/users/login/', CustomRefreshViewSet.as_view(), name='user-login'),
+    path('api/', include(router.urls)),
+    path('language/', UpdateLanguageView.as_view(), name='auth-language'),
+    path('timezone/', UpdateTimezoneView.as_view(), name='auth-timezone'),
+
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path('api/stats', StatsView.as_view(), name='stats')
 ]

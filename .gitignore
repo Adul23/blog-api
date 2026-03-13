@@ -1,4 +1,6 @@
 
 blog_api/settings/.env
 blog_api/venv/
+myenv/
 blog_api/logs/
+*.mo

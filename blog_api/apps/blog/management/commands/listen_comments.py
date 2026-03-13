@@ -1,31 +1,38 @@
-import redis
+import redis.asyncio as redis
 import json
 import datetime
 from django.core.management.base import BaseCommand
-from django.conf import settings
+from django import conf
+from settings import base
+import asyncio 
 
 class Command(BaseCommand):
     help = 'Listens for real-time comment events via Redis'
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.SUCCESS("Starting Redis listener... Waiting for comments..."))
-        r = redis.StrictRedis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
-        
-        p = r.pubsub()
-        
-        p.subscribe('comments')
-        
-        for message in p.listen():
-            if message['type'] == 'message':
-                raw_data = message['data'].decode('utf-8')
-                
-                try:
-                    event = json.loads(raw_data)
-                    timestamp = datetime.datetime.now().strftime("%H:%M:%S")
-                    
-                    self.stdout.write(f"[{timestamp}] New Comment on '{event.get('post_slug')}':")
-                    self.stdout.write(f"   User: {event.get('author')}")
-                    self.stdout.write(f"   Body: {event.get('body')}")
-                    self.stdout.write("-" * 30)
-                except json.JSONDecodeError:
-                    self.stdout.write(f"Raw data: {raw_data}")
+        asyncio.run(self.listen())
+    
+    async def listen(self):
+        """
+        Why asyncio? Cause Asyncio a signle thread can efficiently suspend execution while waiting for messages freeing up the event loop 
+        to perform other tasks.
+        """
+        r = redis.from_url(f"redis://{base.REDIS_HOST}: {base.REDIS_PORT}")
+        pubsub = r.pubsub()
+        await pubsub.subscribe('comments')
+        self.stdout.write(self.style.SUCCESS("Async redis listener started on comments channel"))
+
+        try:
+            async for message in pubsub.listen():
+                if message['type'] == 'message':
+                    data = json.loads(message['data'].decode('utf-8'))
+                    self.stdout.write(
+                        self.style.write(
+                            self.style.SUCCESS(f"Comment on {data.get('post_slug')} " f"by Author ID: {data.get("author")}: {data.get("body")}")
+                        )
+                    )
+        except asyncio.CancelledError:
+            pass
+        finally:
+            await pubsub.unsubscribe('comments')
+            await r.close()
