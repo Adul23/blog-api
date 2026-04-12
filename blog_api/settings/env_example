@@ -1,0 +1,17 @@
+# Django
+SECRET_KEY=django-insecure-very-long-secret-key-goes-here
+DEBUG=True
+ALLOWED_HOSTS=*
+
+# Redis
+BLOG_REDIS_URL=redis://redis:6379/0
+
+# Celery
+BLOG_CELERY_BROKER_URL=redis://redis:6379/1
+
+# Flower
+BLOG_FLOWER_USER=admin
+BLOG_FLOWER_PASSWORD=changeme
+
+# Seed
+BLOG_SEED_DB=false

@@ -24,6 +24,7 @@ class Post(Model):
     class Status(TextChoices):
         DRAFT = 'DR', 'Draft'
         PUBLISHED = 'PB', 'Published'
+        SCHEDULED = 'SC', 'Scheduled'  
 
     author = ForeignKey(CustomUser, on_delete=CASCADE)
     title = CharField(_("Title"), max_length=200)
@@ -37,7 +38,13 @@ class Post(Model):
         choices=Status.choices,
         default=Status.DRAFT
     )
-    
+    publish_at = DateTimeField(
+        _("Publish at"),
+        null=True,
+        blank=True,
+        help_text=_("Set together with status=scheduled for auto-publishing by Celery Beat.")
+    )
+
     created_at = DateTimeField(_("Created at"), auto_now_add=True)
     updated_at = DateTimeField(auto_now=True)
 
