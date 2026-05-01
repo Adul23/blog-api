@@ -3,7 +3,7 @@ DEBUG = False
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-ALLOWED_HOSTS = ['www.example.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',

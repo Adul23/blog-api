@@ -146,8 +146,8 @@ LOCALE_PATHS = [
 # ---------------------------------------------------------------------------
 # Static
 # ---------------------------------------------------------------------------
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
+STATIC_ROOT =  '/var/www/blog_api/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
